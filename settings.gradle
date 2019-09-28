@@ -1,0 +1,3 @@
+rootProject.name='App Template'
+include ':app'
+include ':core'
