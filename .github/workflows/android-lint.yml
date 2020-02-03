@@ -1,0 +1,15 @@
+name: Style
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: docker://roviapps/android-sdk
+      - name: Build
+        run: gradle build
+      - name: ktlint
+        run: gradle ktlint

@@ -1,4 +1,4 @@
-name: Build & Test
+name: Test
 on:
   push:
     branches:
@@ -11,5 +11,5 @@ jobs:
       - uses: docker://roviapps/android-sdk
       - name: Build
         run: gradle build
-      - name: Lint
-        run: gradle ktlint
+      - name: Test
+        run: gradle test
