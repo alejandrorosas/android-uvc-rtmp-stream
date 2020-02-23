@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
     defaultConfig {
@@ -24,11 +25,15 @@ apply from: '../dependencies.gradle'
 
 dependencies {
     implementation project(':core')
+    implementation project(':features:feature-template')
 
     implementation kotlin
     implementation appcompat
     implementation core
     implementation constraintLayout
+    implementation dagger
+
+    kapt daggerCompiler
 
     testImplementation junit
 

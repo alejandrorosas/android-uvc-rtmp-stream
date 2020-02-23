@@ -2,9 +2,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
-apply from: '../dependencies.gradle'
+apply from: '../../dependencies.gradle'
 
 dependencies {
+    implementation project(":core")
+
+    implementation appcompat
     implementation core
     implementation dagger
 

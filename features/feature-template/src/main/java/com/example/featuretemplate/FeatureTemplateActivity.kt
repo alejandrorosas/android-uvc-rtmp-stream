@@ -1,14 +1,16 @@
-package dev.alejandrorosas.apptemplate
+package com.example.featuretemplate
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import dev.alejandrorosas.apptemplate.di.DaggerMainActivityComponent
+import com.example.featuretemplate.di.DaggerFeatureTemplateComponent
 import dev.alejandrorosas.core.di.coreComponent
+import dev.alejandrorosas.featuretemplate.R
 
-class MainActivity : AppCompatActivity(R.layout.activity_main) {
+class FeatureTemplateActivity : AppCompatActivity(R.layout.activity_feature_template) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DaggerMainActivityComponent.builder()
+        DaggerFeatureTemplateComponent
+            .builder()
             .coreComponent(coreComponent)
             .build()
             .inject(this)

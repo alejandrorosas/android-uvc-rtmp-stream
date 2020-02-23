@@ -1,3 +1,4 @@
 rootProject.name='App Template'
 include ':app'
 include ':core'
+include ':features:feature-template'
