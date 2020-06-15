@@ -6,7 +6,5 @@ jobs:
     container: alejandrorosas/android:latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: gradle build
-      - name: ktlint
+      - name: Lint
         run: gradle ktlint
