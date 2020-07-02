@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'dagger.hilt.android.plugin'
 
 apply from: '../../dependencies.gradle'
 
@@ -10,8 +11,12 @@ dependencies {
     implementation appcompat
     implementation core
     implementation dagger
+    implementation hilt
+    implementation androidXHilt
 
     kapt daggerCompiler
+    kapt hiltCompiler
+    kapt androidXHiltCompiler
 
     testImplementation junit
 }

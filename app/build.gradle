@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'dagger.hilt.android.plugin'
 
 android {
     defaultConfig {
@@ -32,8 +33,12 @@ dependencies {
     implementation core
     implementation constraintLayout
     implementation dagger
+    implementation hilt
+    implementation androidXHilt
 
     kapt daggerCompiler
+    kapt hiltCompiler
+    kapt androidXHiltCompiler
 
     testImplementation junit
 
