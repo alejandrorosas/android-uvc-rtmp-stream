@@ -3,15 +3,13 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'dagger.hilt.android.plugin'
 
-apply from: '../dependencies.gradle'
-
 dependencies {
-    implementation core
-    implementation dagger
-    implementation hilt
+    implementation rootProject.ext.core
+    implementation rootProject.ext.dagger
+    implementation rootProject.ext.hilt
 
-    kapt daggerCompiler
-    kapt hiltCompiler
+    kapt rootProject.ext.daggerCompiler
+    kapt rootProject.ext.hiltCompiler
 
-    testImplementation junit
+    testImplementation rootProject.ext.junit
 }
