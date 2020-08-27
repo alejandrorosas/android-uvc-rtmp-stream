@@ -58,7 +58,7 @@ project.ext {
 
     junit = "junit:junit:4.13"
 
-    androidTestJunit = "androidx.test.ext:junit:1.1.1"
+    androidTestJunit = "androidx.test.ext:junit:1.1.2"
     androidTestEspresso = "androidx.test.espresso:espresso-core:3.3.0"
 }
 
