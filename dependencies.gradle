@@ -13,7 +13,7 @@ ext {
     androidXHilt = "androidx.hilt:hilt-lifecycle-viewmodel:$hiltAndroidXVersion"
     androidXHiltCompiler = "androidx.hilt:hilt-compiler:$hiltAndroidXVersion"
 
-    junit = "junit:junit:4.13"
+    junit = "junit:junit:4.13.1"
 
     androidTestJunit = "androidx.test.ext:junit:1.1.2"
     androidTestEspresso = "androidx.test.espresso:espresso-core:3.3.0"
