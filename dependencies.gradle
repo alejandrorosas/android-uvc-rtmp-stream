@@ -1,8 +1,8 @@
 ext {
     kotlin = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     appcompat = "androidx.appcompat:appcompat:1.2.0"
-    dagger = "com.google.dagger:dagger:2.30"
-    daggerCompiler = "com.google.dagger:dagger-compiler:2.30"
+    dagger = "com.google.dagger:dagger:$dagger_version"
+    daggerCompiler = "com.google.dagger:dagger-compiler:$dagger_version"
     constraintLayout = "androidx.constraintlayout:constraintlayout:2.0.4"
     core = "androidx.core:core-ktx:1.3.2"
 
