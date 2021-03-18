@@ -1,4 +1,5 @@
-rootProject.name='App Template'
+rootProject.name='UVC Rtmp Stream'
 include ':app'
 include ':core'
-include ':features:feature-template'
+include ':libraries:streamlib'
+include ':libraries:libuvccamera'

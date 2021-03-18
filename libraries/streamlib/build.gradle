@@ -1,0 +1,8 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+dependencies {
+    implementation project(":libraries:libuvccamera")
+    api "com.github.pedroSG94.rtmp-rtsp-stream-client-java:rtplibrary:1.8.5"
+    implementation rootProject.ext.core
+}

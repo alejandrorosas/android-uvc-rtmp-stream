@@ -23,7 +23,7 @@ android {
 
 dependencies {
     implementation project(':core')
-    implementation project(':features:feature-template')
+    implementation project(':libraries:streamlib')
 
     implementation rootProject.ext.kotlin
     implementation rootProject.ext.appcompat
