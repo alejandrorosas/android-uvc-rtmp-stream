@@ -48,14 +48,18 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), SurfaceHolder.Ca
 
     private fun startStream() {
         findViewById<Button>(R.id.start_stop).setText(R.string.stop_button)
-        startService(Intent(applicationContext, StreamService::class.java).apply {
+        startService(Intent(this, StreamService::class.java).apply {
             putExtra("endpoint", findViewById<EditText>(R.id.et_url).text.toString())
-            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+            bindService(this, connection, Context.BIND_AUTO_CREATE)
         })
     }
 
     private fun stopStream() {
-        stopService(Intent(applicationContext, StreamService::class.java))
+        stopService(Intent(this, StreamService::class.java))
+        if (mBound) {
+            unbindService(connection)
+            mBound = false
+        }
         findViewById<Button>(R.id.start_stop).setText(R.string.start_button)
     }
 
@@ -69,24 +73,20 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), SurfaceHolder.Ca
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
-        if (mBound) {
-            mService.setView(findViewById(R.id.openglview))
-            mService.startPreview()
-        }
+//        if (mBound) {
+//            mService.setView(findViewById<OpenGlView>(R.id.openglview))
+//            mService.startPreview()
+//        }
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        if (mBound) {
-            mService.setView(findViewById(R.id.openglview))
-            mService.stopPreview()
-        }
+//        if (mBound) {
+//            mService.setView(applicationContext)
+//            mService.stopPreview()
+//        }
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        if (mBound) {
-            mService.setView(findViewById(R.id.openglview))
-            mService.stopPreview()
-        }
     }
 
     private lateinit var mService: StreamService
@@ -96,6 +96,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), SurfaceHolder.Ca
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as StreamService.LocalBinder
             mService = binder.getService()
+//            mService.setView(findViewById<OpenGlView>(R.id.openglview))
             mBound = true
         }
 

@@ -1,1 +1,7 @@
-<manifest package="dev.alejandrorosas.streamlib" />
+<manifest
+    package="dev.alejandrorosas.streamlib"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <service android:name="dev.alejandrorosas.streamlib.StreamService"/>
+    </application>
+</manifest>

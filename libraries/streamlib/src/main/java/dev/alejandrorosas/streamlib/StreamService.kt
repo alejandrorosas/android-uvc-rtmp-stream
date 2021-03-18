@@ -18,7 +18,6 @@ import com.serenegiant.usb.USBMonitor
 import com.serenegiant.usb.UVCCamera
 import net.ossrs.rtmp.ConnectCheckerRtmp
 
-
 /**
  * Basic RTMP/RTSP service streaming implementation with camera2
  */
@@ -90,7 +89,7 @@ class StreamService : Service() {
 
     private fun startStreamRtp(endpoint: String) {
         if (!rtmpUSB!!.isStreaming) {
-            if (rtmpUSB!!.prepareVideo(width, height, 30, 4000 * 1024, false, 0, uvcCamera) && rtmpUSB!!.prepareAudio()) {
+            if (rtmpUSB!!.prepareVideo(width, height, 30, 6000 * 1024, false, 0, uvcCamera) && rtmpUSB!!.prepareAudio()) {
                 rtmpUSB!!.startStream(uvcCamera, endpoint)
             }
         } else {
@@ -100,12 +99,12 @@ class StreamService : Service() {
 
     fun setView(openGlView: OpenGlView) {
         this.openGlView = openGlView
-//            rtmpUSB?.replaceView(openGlView)
+        rtmpUSB?.replaceView(openGlView)
     }
 
-    fun setView() {
+    fun setView(context: Context) {
         this.openGlView = null
-//            camera2Base?.replaceView(context)
+        rtmpUSB?.replaceView(context)
     }
 
     fun startPreview() {
@@ -119,7 +118,6 @@ class StreamService : Service() {
     fun stopPreview() {
         if (rtmpUSB?.isOnPreview == true) rtmpUSB!!.stopPreview(uvcCamera)
     }
-
 
     private val connectCheckerRtmp = object : ConnectCheckerRtmp {
         override fun onConnectionSuccessRtmp() {
@@ -156,7 +154,6 @@ class StreamService : Service() {
             .setContentText(text).build()
         notificationManager.notify(notifyId, notification)
     }
-
 
     private val onDeviceConnectListener = object : USBMonitor.OnDeviceConnectListener {
         override fun onAttach(device: UsbDevice?) {
@@ -196,11 +193,9 @@ class StreamService : Service() {
         }
     }
 
-    // Binder given to clients
     private val binder = LocalBinder()
 
     inner class LocalBinder : Binder() {
-        // Return this instance of LocalService so clients can call public methods
         fun getService(): StreamService = this@StreamService
     }
 

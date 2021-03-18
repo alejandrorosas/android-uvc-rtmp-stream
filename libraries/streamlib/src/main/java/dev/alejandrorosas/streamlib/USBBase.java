@@ -69,7 +69,6 @@ public abstract class USBBase
         context = openGlView.getContext();
         this.glInterface = openGlView;
         this.glInterface.init();
-//        cameraManager = new Camera1ApiManager(glInterface.getSurfaceTexture(), context);
         init();
     }
 
@@ -78,7 +77,6 @@ public abstract class USBBase
         context = lightOpenGlView.getContext();
         this.glInterface = lightOpenGlView;
         this.glInterface.init();
-//        cameraManager = new Camera1ApiManager(glInterface.getSurfaceTexture(), context);
         init();
     }
 
@@ -87,7 +85,6 @@ public abstract class USBBase
         this.context = context;
         glInterface = new OffScreenGlThread(context);
         glInterface.init();
-//        cameraManager = new Camera1ApiManager(glInterface.getSurfaceTexture(), context);
         init();
     }
 
@@ -122,21 +119,24 @@ public abstract class USBBase
      * @return true if success, false if you get a error (Normally because the encoder selected
      * doesn't support any configuration seated or your device hasn't a H264 encoder).
      */
-    public boolean prepareVideo(int width, int height, int fps, int bitrate, boolean hardwareRotation,
-                                int iFrameInterval, int rotation, UVCCamera uvcCamera) {
+    public boolean prepareVideo(
+            int width, int height, int fps, int bitrate, boolean hardwareRotation,
+            int iFrameInterval, int rotation, UVCCamera uvcCamera) {
         if (onPreview) {
             stopPreview(uvcCamera);
             onPreview = true;
         }
         return videoEncoder.prepareVideoEncoder(width, height, fps, bitrate, rotation, hardwareRotation,
-                iFrameInterval, FormatVideoEncoder.SURFACE);
+                iFrameInterval, FormatVideoEncoder.SURFACE
+        );
     }
 
     /**
      * backward compatibility reason
      */
-    public boolean prepareVideo(int width, int height, int fps, int bitrate, boolean hardwareRotation,
-                                int rotation, UVCCamera uvcCamera) {
+    public boolean prepareVideo(
+            int width, int height, int fps, int bitrate, boolean hardwareRotation,
+            int rotation, UVCCamera uvcCamera) {
         return prepareVideo(width, height, fps, bitrate, hardwareRotation, 2, rotation, uvcCamera);
     }
 
@@ -154,8 +154,9 @@ public abstract class USBBase
      * @return true if success, false if you get a error (Normally because the encoder selected
      * doesn't support any configuration seated or your device hasn't a AAC encoder).
      */
-    public boolean prepareAudio(int bitrate, int sampleRate, boolean isStereo, boolean echoCanceler,
-                                boolean noiseSuppressor) {
+    public boolean prepareAudio(
+            int bitrate, int sampleRate, boolean isStereo, boolean echoCanceler,
+            boolean noiseSuppressor) {
         microphoneManager.createMicrophone(sampleRate, isStereo, echoCanceler, noiseSuppressor);
         prepareAudioRtp(isStereo, sampleRate);
         return audioEncoder.prepareAudioEncoder(bitrate, sampleRate, isStereo, 0);
@@ -225,7 +226,9 @@ public abstract class USBBase
         }
         videoTrack = -1;
         audioTrack = -1;
-        if (!streaming) stopStream(uvcCamera);
+        if (!streaming) {
+            stopStream(uvcCamera);
+        }
     }
 
     /**
@@ -395,23 +398,6 @@ public abstract class USBBase
         return videoEnabled;
     }
 
-    /**
-     * Disable send camera frames and send a black image with low bitrate(to reduce bandwith used)
-     * instance it.
-     */
-    public void disableVideo() {
-//        videoEncoder.startSendBlackImage();
-        videoEnabled = false;
-    }
-
-    /**
-     * Enable send camera frames.
-     */
-    public void enableVideo() {
-//        videoEncoder.stopSendBlackImage();
-        videoEnabled = true;
-    }
-
     public int getBitrate() {
         return videoEncoder.getBitRate();
     }
@@ -490,19 +476,25 @@ public abstract class USBBase
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && recording && canRecord) {
             mediaMuxer.writeSampleData(audioTrack, aacBuffer, info);
         }
-        if (streaming) getAacDataRtp(aacBuffer, info);
+        if (streaming) {
+            getAacDataRtp(aacBuffer, info);
+        }
     }
 
     protected abstract void onSpsPpsVpsRtp(ByteBuffer sps, ByteBuffer pps, ByteBuffer vps);
 
     @Override
     public void onSpsPps(ByteBuffer sps, ByteBuffer pps) {
-        if (streaming) onSpsPpsVpsRtp(sps, pps, null);
+        if (streaming) {
+            onSpsPpsVpsRtp(sps, pps, null);
+        }
     }
 
     @Override
     public void onSpsPpsVps(ByteBuffer sps, ByteBuffer pps, ByteBuffer vps) {
-        if (streaming) onSpsPpsVpsRtp(sps, pps, vps);
+        if (streaming) {
+            onSpsPpsVpsRtp(sps, pps, vps);
+        }
     }
 
     protected abstract void getH264DataRtp(ByteBuffer h264Buffer, MediaCodec.BufferInfo info);
@@ -511,17 +503,21 @@ public abstract class USBBase
     public void getVideoData(ByteBuffer h264Buffer, MediaCodec.BufferInfo info) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && recording) {
             if (info.flags == MediaCodec.BUFFER_FLAG_KEY_FRAME
-                    && !canRecord
-                    && videoFormat != null
-                    && audioFormat != null) {
+                && !canRecord
+                && videoFormat != null
+                && audioFormat != null) {
                 videoTrack = mediaMuxer.addTrack(videoFormat);
                 audioTrack = mediaMuxer.addTrack(audioFormat);
                 mediaMuxer.start();
                 canRecord = true;
             }
-            if (canRecord) mediaMuxer.writeSampleData(videoTrack, h264Buffer, info);
+            if (canRecord) {
+                mediaMuxer.writeSampleData(videoTrack, h264Buffer, info);
+            }
         }
-        if (streaming) getH264DataRtp(h264Buffer, info);
+        if (streaming) {
+            getH264DataRtp(h264Buffer, info);
+        }
     }
 
     @Override
@@ -542,5 +538,31 @@ public abstract class USBBase
     @Override
     public void onAudioFormat(MediaFormat mediaFormat) {
         audioFormat = mediaFormat;
+    }
+
+    public void replaceView(Context context) {
+        replaceGlInterface(new OffScreenGlThread(context));
+    }
+
+    public void replaceView(OpenGlView openGlView) {
+        replaceGlInterface(openGlView);
+    }
+
+    public void replaceView(LightOpenGlView lightOpenGlView) {
+        replaceGlInterface(lightOpenGlView);
+    }
+
+    /**
+     * Replace glInterface used on fly. Ignored if you use SurfaceView or TextureView
+     */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    private void replaceGlInterface(GlInterface glInterface) {
+        if (this.glInterface != null && Build.VERSION.SDK_INT >= 18) {
+            if (isStreaming() || isRecording() || isOnPreview()) {
+                this.glInterface.stop();
+            }
+            this.glInterface = glInterface;
+            this.glInterface.init();
+        }
     }
 }
