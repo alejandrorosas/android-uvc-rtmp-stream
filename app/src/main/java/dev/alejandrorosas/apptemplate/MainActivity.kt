@@ -48,10 +48,12 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), SurfaceHolder.Ca
 
     private fun startStream() {
         findViewById<Button>(R.id.start_stop).setText(R.string.stop_button)
-        startService(Intent(this, StreamService::class.java).apply {
-            putExtra("endpoint", findViewById<EditText>(R.id.et_url).text.toString())
-            bindService(this, connection, Context.BIND_AUTO_CREATE)
-        })
+        startService(
+            Intent(this, StreamService::class.java).apply {
+                putExtra("endpoint", findViewById<EditText>(R.id.et_url).text.toString())
+                bindService(this, connection, Context.BIND_AUTO_CREATE)
+            }
+        )
     }
 
     private fun stopStream() {
@@ -124,4 +126,3 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), SurfaceHolder.Ca
         return false
     }
 }
-
