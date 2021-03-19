@@ -7,9 +7,9 @@
   jni/libuvc/android/jni/../../../localdefines.h \
   jni/libuvc/android/jni/../../include/libuvc/libuvc_internal.h \
   jni/libuvc/android/jni/../../include/utlist.h \
-  jni/libjpeg-turbo-1.5.0/jpeglib.h \
-  jni/libjpeg-turbo-1.5.0/include/jconfig.h \
-  jni/libjpeg-turbo-1.5.0/jmorecfg.h
+  /Users/alejandrorosas/personal/android-uvc-rtmp-stream/libraries/libuvccamera/src/main/jni/libjpeg-turbo-2.0.6/jpeglib.h \
+  /Users/alejandrorosas/personal/android-uvc-rtmp-stream/libraries/libuvccamera/src/main/jni/libjpeg-turbo-2.0.6/include/jconfig.h \
+  /Users/alejandrorosas/personal/android-uvc-rtmp-stream/libraries/libuvccamera/src/main/jni/libjpeg-turbo-2.0.6/jmorecfg.h
 
 jni/libuvc/android/jni/../../include/libuvc/libuvc.h:
 
@@ -25,8 +25,8 @@ jni/libuvc/android/jni/../../include/libuvc/libuvc_internal.h:
 
 jni/libuvc/android/jni/../../include/utlist.h:
 
-jni/libjpeg-turbo-1.5.0/jpeglib.h:
+/Users/alejandrorosas/personal/android-uvc-rtmp-stream/libraries/libuvccamera/src/main/jni/libjpeg-turbo-2.0.6/jpeglib.h:
 
-jni/libjpeg-turbo-1.5.0/include/jconfig.h:
+/Users/alejandrorosas/personal/android-uvc-rtmp-stream/libraries/libuvccamera/src/main/jni/libjpeg-turbo-2.0.6/include/jconfig.h:
 
-jni/libjpeg-turbo-1.5.0/jmorecfg.h:
+/Users/alejandrorosas/personal/android-uvc-rtmp-stream/libraries/libuvccamera/src/main/jni/libjpeg-turbo-2.0.6/jmorecfg.h:

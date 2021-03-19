@@ -26,6 +26,7 @@ package com.serenegiant.usb;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -57,6 +58,8 @@ public final class USBMonitor {
 
 	private static final String ACTION_USB_PERMISSION_BASE = "com.serenegiant.USB_PERMISSION.";
 	private final String ACTION_USB_PERMISSION = ACTION_USB_PERMISSION_BASE + hashCode();
+	private static final String VL_INTERNAL_PERMISSION = "com.ucm.camera.INTERNAL_PERMISSION";
+	private static final String UNKNOWN_SERIAL = "Unknown Serial Number";
 
 	public static final String ACTION_USB_DEVICE_ATTACHED = "android.hardware.usb.action.USB_DEVICE_ATTACHED";
 
@@ -113,8 +116,6 @@ public final class USBMonitor {
 
 	public USBMonitor(final Context context, final OnDeviceConnectListener listener) {
 		if (DEBUG) Log.v(TAG, "USBMonitor:Constructor");
-		if (listener == null)
-			throw new IllegalArgumentException("OnDeviceConnectListener should not null.");
 		mWeakContext = new WeakReference<Context>(context);
 		mUsbManager = (UsbManager)context.getSystemService(Context.USB_SERVICE);
 		mOnDeviceConnectListener = listener;
@@ -173,10 +174,11 @@ public final class USBMonitor {
 			final Context context = mWeakContext.get();
 			if (context != null) {
 				mPermissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0);
-				final IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+				final IntentFilter usbPermissionFilter = new IntentFilter(ACTION_USB_PERMISSION);
 				// ACTION_USB_DEVICE_ATTACHED never comes on some devices so it should not be added here
-				filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-				context.registerReceiver(mUsbReceiver, filter);
+				final IntentFilter usbDetachFilter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
+				context.registerReceiver(mUsbReceiver, usbPermissionFilter);
+				context.registerReceiver(mUsbAttachDetachReceiver, usbDetachFilter, VL_INTERNAL_PERMISSION, null);
 			}
 			// start connection check
 			mDeviceCounts = 0;
@@ -200,6 +202,7 @@ public final class USBMonitor {
 			try {
 				if (context != null) {
 					context.unregisterReceiver(mUsbReceiver);
+					context.unregisterReceiver(mUsbAttachDetachReceiver);
 				}
 			} catch (final Exception e) {
 				Log.w(TAG, e);
@@ -477,10 +480,19 @@ public final class USBMonitor {
 		public void onReceive(final Context context, final Intent intent) {
 			if (destroyed) return;
 			final String action = intent.getAction();
+			intent.setExtrasClassLoader(new UsbDeviceClassLoader());
 			if (ACTION_USB_PERMISSION.equals(action)) {
 				// when received the result of requesting USB permission
 				synchronized (USBMonitor.this) {
-					final UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+					UsbDevice deviceFromIntent;
+					try {
+						deviceFromIntent = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+						Log.v(TAG, "Device successfully pulled from intent");
+					} catch (Exception e) {
+						Log.e(TAG, "Illegal extra type provided to intent", e);
+						deviceFromIntent = null;
+					}
+					final UsbDevice device = deviceFromIntent;
 					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 						if (device != null) {
 							// get permission, call onConnect
@@ -491,7 +503,20 @@ public final class USBMonitor {
 						processCancel(device);
 					}
 				}
-			} else if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
+			}
+		}
+	};
+
+	/**
+	 * BroadcastReceiver for USB attach/detach
+	 */
+	private final BroadcastReceiver mUsbAttachDetachReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(final Context context, final Intent intent) {
+			if (destroyed) return;
+			final String action = intent.getAction();
+			if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
 				final UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
 				updatePermission(device, hasPermission(device));
 				processAttach(device);
@@ -665,7 +690,14 @@ public final class USBMonitor {
 		if (useNewAPI && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			sb.append("#");
 			if (TextUtils.isEmpty(serial)) {
-				sb.append(device.getSerialNumber());	sb.append("#");	// API >= 21
+				try {
+					sb.append(device.getSerialNumber());
+				} catch (SecurityException e) {
+					Log.v(TAG, "getDeviceKeyName(), Error trying to get device serial number, app has not yet been granted permission to the usb device");
+					sb.append(UNKNOWN_SERIAL);
+				} finally {
+					sb.append("#");    // API >= 21
+				}
 			}
 			sb.append(device.getManufacturerName());	sb.append("#");	// API >= 21
 			sb.append(device.getConfigurationCount());	sb.append("#");	// API >= 21
@@ -895,49 +927,56 @@ public final class USBMonitor {
 			if (Build.VERSION.SDK_INT >=  Build.VERSION_CODES.LOLLIPOP) {
 				info.manufacturer = device.getManufacturerName();
 				info.product = device.getProductName();
-				info.serial = device.getSerialNumber();
+				try {
+					info.serial = device.getSerialNumber();
+				} catch (SecurityException e) {
+					Log.v(TAG, "updateDeviceInfo(), Error trying to get device serial number, app has not yet been granted permission to the usb device.");
+					info.serial = UNKNOWN_SERIAL;
+				}
 			}
 			if (Build.VERSION.SDK_INT >=  Build.VERSION_CODES.M) {
 				info.usb_version = device.getVersion();
 			}
 			if ((manager != null) && manager.hasPermission(device)) {
 				final UsbDeviceConnection connection = manager.openDevice(device);
-				final byte[] desc = connection.getRawDescriptors();
+				if (connection != null) {
+					final byte[] desc = connection.getRawDescriptors();
 
-				if (TextUtils.isEmpty(info.usb_version)) {
-					info.usb_version = String.format("%x.%02x", ((int)desc[3] & 0xff), ((int)desc[2] & 0xff));
-				}
-				if (TextUtils.isEmpty(info.version)) {
-					info.version = String.format("%x.%02x", ((int)desc[13] & 0xff), ((int)desc[12] & 0xff));
-				}
-				if (TextUtils.isEmpty(info.serial)) {
-					info.serial = connection.getSerial();
-				}
+					if (TextUtils.isEmpty(info.usb_version)) {
+						info.usb_version = String.format("%x.%02x", ((int) desc[3] & 0xff), ((int) desc[2] & 0xff));
+					}
+					if (TextUtils.isEmpty(info.version)) {
+						info.version = String.format("%x.%02x", ((int) desc[13] & 0xff), ((int) desc[12] & 0xff));
+					}
+					if (TextUtils.isEmpty(info.serial)) {
+						info.serial = connection.getSerial();
+					}
 
-				final byte[] languages = new byte[256];
-				int languageCount = 0;
-				// controlTransfer(int requestType, int request, int value, int index, byte[] buffer, int length, int timeout)
-				try {
-					int result = connection.controlTransfer(
-						USB_REQ_STANDARD_DEVICE_GET, // USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_DEVICE
-	    				USB_REQ_GET_DESCRIPTOR,
-	    				(USB_DT_STRING << 8) | 0, 0, languages, 256, 0);
-					if (result > 0) {
-	        			languageCount = (result - 2) / 2;
+					final byte[] languages = new byte[256];
+					int languageCount = 0;
+					// controlTransfer(int requestType, int request, int value, int index, byte[] buffer, int length, int timeout)
+					try {
+						int result = connection.controlTransfer(
+								USB_REQ_STANDARD_DEVICE_GET, // USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_DEVICE
+								USB_REQ_GET_DESCRIPTOR,
+								(USB_DT_STRING << 8) | 0, 0, languages, 256, 0);
+						if (result > 0) {
+							languageCount = (result - 2) / 2;
+						}
+						if (languageCount > 0) {
+							if (TextUtils.isEmpty(info.manufacturer)) {
+								info.manufacturer = getString(connection, desc[14], languageCount, languages);
+							}
+							if (TextUtils.isEmpty(info.product)) {
+								info.product = getString(connection, desc[15], languageCount, languages);
+							}
+							if (TextUtils.isEmpty(info.serial)) {
+								info.serial = getString(connection, desc[16], languageCount, languages);
+							}
+						}
+					} finally {
+						connection.close();
 					}
-					if (languageCount > 0) {
-						if (TextUtils.isEmpty(info.manufacturer)) {
-							info.manufacturer = getString(connection, desc[14], languageCount, languages);
-						}
-						if (TextUtils.isEmpty(info.product)) {
-							info.product = getString(connection, desc[15], languageCount, languages);
-						}
-						if (TextUtils.isEmpty(info.serial)) {
-							info.serial = getString(connection, desc[16], languageCount, languages);
-						}
-					}
-				} finally {
-					connection.close();
 				}
 			}
 			if (TextUtils.isEmpty(info.manufacturer)) {
@@ -1347,5 +1386,21 @@ public final class USBMonitor {
 			}
 		}
 	}
+
+    class UsbDeviceClassLoader extends ClassLoader {
+        private final List<String> VALID_CLASS_NAMES = Arrays.asList(UsbDevice.class.getName());
+        @Override
+        public Class<?> loadClass(String name) throws ClassNotFoundException {
+            if (name == null) {
+                throw new ClassNotFoundException("Class being loaded provides no name");
+            }
+            // Extract parent class (eg. "android.net.Uri$HierarchicalUri" -> "android.net.Uri"
+            String parentClassName = name.split("\\$")[0]; // escape '$' as it is regex special char
+            if (!VALID_CLASS_NAMES.contains(parentClassName)) {
+                throw new ClassNotFoundException("Class not allowed: " + name);
+            }
+            return super.loadClass(name);
+        }
+    }
 
 }

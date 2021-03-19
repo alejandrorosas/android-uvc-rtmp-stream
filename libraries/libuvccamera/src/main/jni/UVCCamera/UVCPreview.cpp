@@ -675,8 +675,9 @@ int UVCPreview::setCaptureDisplay(ANativeWindow *capture_window) {
 		}
 		if (mCaptureWindow != capture_window) {
 			// release current Surface if already assigned.
-			if (UNLIKELY(mCaptureWindow))
-				ANativeWindow_release(mCaptureWindow);
+			// Viggy edit - do not release, since the Surface is coming from a MediaRecorder
+			// if (UNLIKELY(mCaptureWindow))
+			// 	 ANativeWindow_release(mCaptureWindow);
 			mCaptureWindow = capture_window;
 			// if you use Surface came from MediaCodec#createInputSurface
 			// you could not change window format at least when you use
@@ -688,7 +689,8 @@ int UVCPreview::setCaptureDisplay(ANativeWindow *capture_window) {
 				if ((window_format != WINDOW_FORMAT_RGB_565)
 					&& (previewFormat == WINDOW_FORMAT_RGB_565)) {
 					LOGE("window format mismatch, cancelled movie capturing.");
-					ANativeWindow_release(mCaptureWindow);
+					// Viggy edit - see above, do not release
+					// ANativeWindow_release(mCaptureWindow);
 					mCaptureWindow = NULL;
 				}
 			}
@@ -707,9 +709,9 @@ void UVCPreview::addCaptureFrame(uvc_frame_t *frame) {
 		}
 		captureQueu = frame;
 		pthread_cond_broadcast(&capture_sync);
-    } else {
-        // Add this can solve native leak
-        recycle_frame(frame);
+	} else { // still need to recycle frame if isRunning is false, otherwise memory leak can occur
+	    // BM added from https://github.com/saki4510t/UVCCamera/issues/259#issuecomment-341611634
+	    recycle_frame(frame);
 	}
 	pthread_mutex_unlock(&capture_mutex);
 }
@@ -868,7 +870,11 @@ void UVCPreview::do_capture_callback(JNIEnv *env, uvc_frame_t *frame) {
 				}
 			}
 			jobject buf = env->NewDirectByteBuffer(callback_frame->data, callbackPixelBytes);
-			env->CallVoidMethod(mFrameCallbackObj, iframecallback_fields.onFrame, buf);
+			pthread_mutex_lock(&capture_mutex); // BM added from https://github.com/saki4510t/UVCCamera/issues/244#issuecomment-397502197
+			if (iframecallback_fields.onFrame != NULL) {
+			    env->CallVoidMethod(mFrameCallbackObj, iframecallback_fields.onFrame, buf);
+			}
+			pthread_mutex_unlock(&capture_mutex);
 			env->ExceptionClear();
 			env->DeleteLocalRef(buf);
 		}
