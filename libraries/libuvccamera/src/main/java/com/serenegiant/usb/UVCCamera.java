@@ -116,7 +116,7 @@ public class UVCCamera {
 	private static boolean isLoaded;
 	static {
 		if (!isLoaded) {
-			System.loadLibrary("jpeg-turbo1500");
+			System.loadLibrary("jpeg-turbo");
 			System.loadLibrary("usb100");
 			System.loadLibrary("uvc");
 			System.loadLibrary("UVCCamera");
@@ -347,15 +347,12 @@ public class UVCCamera {
 			final int format_nums = formats.length();
 			for (int i = 0; i < format_nums; i++) {
 				final JSONObject format = formats.getJSONObject(i);
-				if(format.has("type") && format.has("size")) {
-					final int format_type = format.getInt("type");
-					if ((format_type == type) || (type == -1)) {
-						addSize(format, format_type, 0, result);
-					}
+				final int format_type = format.getInt("type");
+				if ((format_type == type) || (type == -1)) {
+					addSize(format, format_type, 0, result);
 				}
 			}
 		} catch (final JSONException e) {
-			e.printStackTrace();
 		}
 		return result;
 	}
