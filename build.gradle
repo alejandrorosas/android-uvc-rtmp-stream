@@ -27,6 +27,12 @@ allprojects {
             content { includeGroup("com.github.pedroSG94.rtmp-rtsp-stream-client-java") }
         }
     }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
 }
 
 subprojects {

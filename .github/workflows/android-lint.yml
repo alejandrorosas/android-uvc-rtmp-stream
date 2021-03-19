@@ -1,7 +1,7 @@
 name: Style
 on: push
 jobs:
-  build:
+  Lint:
     runs-on: ubuntu-latest
     container: alejandrorosas/android-ndk:latest
     steps:

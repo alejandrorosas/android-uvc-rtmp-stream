@@ -1,0 +1,22 @@
+<PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="Stream settings" />
+
+    <EditTextPreference
+        app:iconSpaceReserved="false"
+        app:key="endpoint"
+        app:title="Stream URL"
+        app:useSimpleSummaryProvider="true" />
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="Advanced settings" />
+
+    <SwitchPreferenceCompat
+        app:iconSpaceReserved="false"
+        app:key="obs_commands_screen_enabled"
+        app:title="Enable OBS commands screen" />
+
+</PreferenceScreen>

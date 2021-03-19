@@ -1,7 +1,7 @@
 name: Test
 on: push
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-latest
     container: alejandrorosas/android-ndk:latest
     steps:
@@ -16,5 +16,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Lint
+      - name: Test
         run: ./gradlew test

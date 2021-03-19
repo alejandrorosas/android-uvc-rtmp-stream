@@ -30,5 +30,6 @@
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/device_filterall" />
         </activity>
+        <activity android:name=".SettingsActivity" />
     </application>
 </manifest>

@@ -15,25 +15,35 @@
         app:keepAspectRatio="true"
         />
 
-    <EditText
-        android:id="@+id/et_url"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#f00"
-        android:textColorHint="#f00"
+    <ImageButton
+        android:id="@+id/settings_button"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_margin="16dp"
+        android:background="?selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_settings"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:tint="@android:color/white"
         />
 
     <Button
-        android:id="@+id/start_stop"
-        android:layout_width="wrap_content"
+        android:id="@+id/start_stop_service"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/start_button"
+        android:text="@string/button_start_service"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/start_stop_stream"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+    <Button
+        android:id="@+id/start_stop_stream"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/button_start_stream"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

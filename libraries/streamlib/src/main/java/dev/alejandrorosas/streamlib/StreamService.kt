@@ -31,6 +31,8 @@ class StreamService : Service() {
         private const val height = 1080
     }
 
+    val isStreaming: Boolean get() = endpoint != null
+
     private var endpoint: String? = null
     private var rtmpUSB: RtmpUSB? = null
     private var openGlView: OpenGlView? = null
@@ -64,7 +66,6 @@ class StreamService : Service() {
         Log.e(TAG, "RTP service started")
         usbMonitor = USBMonitor(this, onDeviceConnectListener)
         usbMonitor.register()
-        endpoint = intent?.extras?.getString("endpoint")
         return START_STICKY
     }
 
@@ -87,11 +88,21 @@ class StreamService : Service() {
         }
     }
 
-    private fun startStreamRtp(endpoint: String) {
-        if (!rtmpUSB!!.isStreaming) {
+    fun startStreamRtp(endpoint: String): Boolean {
+        if (rtmpUSB?.isStreaming == false) {
+            this.endpoint = endpoint
             if (rtmpUSB!!.prepareVideo(width, height, 30, 6000 * 1024, false, 0, uvcCamera) && rtmpUSB!!.prepareAudio()) {
                 rtmpUSB!!.startStream(uvcCamera, endpoint)
+                return true
             }
+        }
+        return false
+    }
+
+    fun stopStream(force: Boolean = true) {
+        if (force) endpoint = null
+        if (rtmpUSB!!.isStreaming) {
+            rtmpUSB!!.stopStreamRtp()
         } else {
             showNotification("You are already streaming :(")
         }
@@ -161,35 +172,33 @@ class StreamService : Service() {
         }
 
         override fun onConnect(device: UsbDevice?, ctrlBlock: USBMonitor.UsbControlBlock?, createNew: Boolean) {
-            if (endpoint != null) {
-                val camera = UVCCamera()
-                camera.open(ctrlBlock)
+            val camera = UVCCamera()
+            camera.open(ctrlBlock)
+            try {
+                camera.setPreviewSize(width, height, UVCCamera.FRAME_FORMAT_MJPEG)
+            } catch (e: IllegalArgumentException) {
+                camera.destroy()
                 try {
-                    camera.setPreviewSize(width, height, UVCCamera.FRAME_FORMAT_MJPEG)
-                } catch (e: IllegalArgumentException) {
-                    camera.destroy()
-                    try {
-                        camera.setPreviewSize(width, height, UVCCamera.DEFAULT_PREVIEW_MODE)
-                    } catch (e1: IllegalArgumentException) {
-                        return
-                    }
+                    camera.setPreviewSize(width, height, UVCCamera.DEFAULT_PREVIEW_MODE)
+                } catch (e1: IllegalArgumentException) {
+                    return
                 }
-                uvcCamera = camera
-                prepareStreamRtp()
-                rtmpUSB!!.startPreview(uvcCamera, width, height)
-                startStreamRtp(endpoint!!)
             }
+            uvcCamera = camera
+            prepareStreamRtp()
+            rtmpUSB!!.startPreview(uvcCamera, width, height)
+            endpoint?.let { startStreamRtp(it) }
         }
 
         override fun onDisconnect(device: UsbDevice?, ctrlBlock: USBMonitor.UsbControlBlock?) {
-            stopStream()
+            stopStream(false)
         }
 
         override fun onCancel(device: UsbDevice?) {
         }
 
         override fun onDettach(device: UsbDevice?) {
-            stopStream()
+            stopStream(false)
         }
     }
 
