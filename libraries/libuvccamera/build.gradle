@@ -38,9 +38,13 @@ tasks.withType(JavaCompile) {
 }
 
 String getNdkBuildPath() {
-    Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-    def ndkBuildingDir = properties.getProperty("ndk.dir")
+    def ndkBuildingDir = System.env['ANDROID_NDK_HOME']
+
+    if (ndkBuildingDir == null) {
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file('local.properties').newDataInputStream())
+        ndkBuildingDir = properties.getProperty("ndk.dir")
+    }
 
     def ndkBuildPath
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
