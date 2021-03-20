@@ -28,22 +28,13 @@
         />
 
     <Button
-        android:id="@+id/start_stop_service"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/button_start_service"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/start_stop_stream"
-        app:layout_constraintStart_toStartOf="parent"
-        />
-
-    <Button
         android:id="@+id/start_stop_stream"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/button_start_stream"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

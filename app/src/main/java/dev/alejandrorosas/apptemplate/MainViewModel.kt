@@ -21,32 +21,12 @@ class MainViewModel @Inject constructor(
 
     fun getViewState(): LiveData<ViewState> = viewState
 
-    fun onServiceConnected(mService: StreamService) {
-        viewState.postValue(
-            ViewState(
-                serviceButtonText = R.string.button_stop_service,
-                streamButtonText = if (mService.isStreaming) R.string.button_stop_stream else R.string.button_start_stream,
-            )
-        )
-    }
-
-    fun onServiceDisconnected() {
-        viewState.postValue(
-            ViewState(
-                serviceButtonText = R.string.button_start_service,
-                streamButtonText = null,
-            )
-        )
-    }
-
-    fun onStopService() {
-        onServiceDisconnected()
-    }
-
     fun onStreamControlButtonClick() {
         withService {
             if (it.isStreaming) {
-                it.stopStream()
+                it.stopStream(true)
+
+                viewState.postValue(viewState.value!!.copy(streamButtonText = R.string.button_start_stream))
             } else {
                 val endpoint = sharedPreferences.getString("endpoint", null)
 
@@ -55,12 +35,8 @@ class MainViewModel @Inject constructor(
                     return@withService
                 }
 
-                val streamStarted = it.startStreamRtp(endpoint)
-                viewState.postValue(
-                    viewState.value!!.copy(
-                        streamButtonText = if (streamStarted) R.string.button_stop_stream else R.string.button_start_stream
-                    )
-                )
+                it.startStreamRtp(endpoint)
+                viewState.postValue(viewState.value!!.copy(streamButtonText = R.string.button_stop_stream))
             }
         }
     }
@@ -70,7 +46,6 @@ class MainViewModel @Inject constructor(
     }
 
     data class ViewState(
-        val serviceButtonText: Int = R.string.button_start_service,
-        val streamButtonText: Int? = null,
+        val streamButtonText: Int = R.string.button_start_stream,
     )
 }

@@ -29,16 +29,18 @@ class StreamService : Service() {
         private const val notifyId = 123456
         private const val width = 1920
         private const val height = 1080
+
+        var openGlView: OpenGlView? = null
     }
 
     val isStreaming: Boolean get() = endpoint != null
 
     private var endpoint: String? = null
     private var rtmpUSB: RtmpUSB? = null
-    private var openGlView: OpenGlView? = null
     private var uvcCamera: UVCCamera? = null
-    private lateinit var usbMonitor: USBMonitor
+    private var usbMonitor: USBMonitor? = null
     private val notificationManager: NotificationManager by lazy { getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
+    var onStartCallback: OnConnectCallback? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -48,6 +50,11 @@ class StreamService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
         keepAliveTrick()
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        onStartCallback = null
+        return super.onUnbind(intent)
     }
 
     private fun keepAliveTrick() {
@@ -65,7 +72,8 @@ class StreamService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.e(TAG, "RTP service started")
         usbMonitor = USBMonitor(this, onDeviceConnectListener)
-        usbMonitor.register()
+        usbMonitor!!.register()
+        onStartCallback?.onStart()
         return START_STICKY
     }
 
@@ -73,7 +81,7 @@ class StreamService : Service() {
         super.onDestroy()
         Log.e(TAG, "RTP service destroy")
         stopStream()
-        usbMonitor.unregister()
+        usbMonitor?.unregister()
         uvcCamera?.destroy()
     }
 
@@ -91,7 +99,7 @@ class StreamService : Service() {
     fun startStreamRtp(endpoint: String): Boolean {
         if (rtmpUSB?.isStreaming == false) {
             this.endpoint = endpoint
-            if (rtmpUSB!!.prepareVideo(width, height, 30, 6000 * 1024, false, 0, uvcCamera) && rtmpUSB!!.prepareAudio()) {
+            if (rtmpUSB!!.prepareVideo(width, height, 30, 4000 * 1024, false, 0, uvcCamera) && rtmpUSB!!.prepareAudio()) {
                 rtmpUSB!!.startStream(uvcCamera, endpoint)
                 return true
             }
@@ -99,22 +107,22 @@ class StreamService : Service() {
         return false
     }
 
-    fun stopStream(force: Boolean = true) {
+    fun stopStream(force: Boolean) {
         if (force) endpoint = null
         if (rtmpUSB!!.isStreaming) {
-            rtmpUSB!!.stopStreamRtp()
+            rtmpUSB!!.stopStream(uvcCamera)
         } else {
             showNotification("You are already streaming :(")
         }
     }
 
-    fun setView(openGlView: OpenGlView) {
-        this.openGlView = openGlView
+    fun setView(view: OpenGlView) {
+        openGlView = view
         rtmpUSB?.replaceView(openGlView)
     }
 
     fun setView(context: Context) {
-        this.openGlView = null
+        openGlView = null
         rtmpUSB?.replaceView(context)
     }
 
@@ -168,7 +176,7 @@ class StreamService : Service() {
 
     private val onDeviceConnectListener = object : USBMonitor.OnDeviceConnectListener {
         override fun onAttach(device: UsbDevice?) {
-            usbMonitor.requestPermission(device)
+            usbMonitor!!.requestPermission(device)
         }
 
         override fun onConnect(device: UsbDevice?, ctrlBlock: USBMonitor.UsbControlBlock?, createNew: Boolean) {
@@ -210,5 +218,9 @@ class StreamService : Service() {
 
     override fun onBind(intent: Intent): IBinder {
         return binder
+    }
+
+    fun interface OnConnectCallback {
+        fun onStart()
     }
 }
