@@ -10,3 +10,12 @@ local.properties
 
 .DS_Store
 .cxx
+
+*.so
+*.class
+bin/
+obj
+obj/local
+gen/
+*.cache
+libuvccamera/src/main/libs
