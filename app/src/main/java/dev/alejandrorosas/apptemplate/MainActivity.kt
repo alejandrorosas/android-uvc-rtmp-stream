@@ -67,8 +67,8 @@ class MainActivity : AppCompatActivity(R.layout.activity_main), SurfaceHolder.Ca
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
         mService?.let {
-            it.stopPreview()
             it.setView(applicationContext)
+            it.stopPreview()
         }
     }
 

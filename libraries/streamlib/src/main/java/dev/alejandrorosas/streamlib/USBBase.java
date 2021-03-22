@@ -540,29 +540,41 @@ public abstract class USBBase
         audioFormat = mediaFormat;
     }
 
-    public void replaceView(Context context) {
-        replaceGlInterface(new OffScreenGlThread(context));
+    public void replaceView(Context context, UVCCamera uvcCamera) {
+        replaceGlInterface(new OffScreenGlThread(context), uvcCamera);
     }
 
-    public void replaceView(OpenGlView openGlView) {
-        replaceGlInterface(openGlView);
+    public void replaceView(OpenGlView openGlView, UVCCamera uvcCamera) {
+        replaceGlInterface(openGlView, uvcCamera);
     }
 
-    public void replaceView(LightOpenGlView lightOpenGlView) {
-        replaceGlInterface(lightOpenGlView);
+    public void replaceView(LightOpenGlView lightOpenGlView, UVCCamera uvcCamera) {
+        replaceGlInterface(lightOpenGlView, uvcCamera);
     }
 
     /**
      * Replace glInterface used on fly. Ignored if you use SurfaceView or TextureView
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private void replaceGlInterface(GlInterface glInterface) {
+    private void replaceGlInterface(GlInterface glInterface, UVCCamera uvcCamera) {
         if (this.glInterface != null && Build.VERSION.SDK_INT >= 18) {
             if (isStreaming() || isRecording() || isOnPreview()) {
+                uvcCamera.stopPreview();
+                this.glInterface.removeMediaCodecSurface();
                 this.glInterface.stop();
+                this.glInterface = glInterface;
+                this.glInterface.init();
+                this.glInterface.setEncoderSize(videoEncoder.getWidth(), videoEncoder.getHeight());
+                this.glInterface.setRotation(0);
+                this.glInterface.start();
+                if (isStreaming() || isRecording()) {
+                    this.glInterface.addMediaCodecSurface(videoEncoder.getInputSurface());
+                }
+                uvcCamera.setPreviewTexture(glInterface.getSurfaceTexture());
+                uvcCamera.startPreview();
+            } else {
+                this.glInterface = glInterface;
             }
-            this.glInterface = glInterface;
-            this.glInterface.init();
         }
     }
 }

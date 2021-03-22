@@ -40,7 +40,6 @@ class StreamService : Service() {
     private var uvcCamera: UVCCamera? = null
     private var usbMonitor: USBMonitor? = null
     private val notificationManager: NotificationManager by lazy { getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
-    var onStartCallback: OnConnectCallback? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -50,11 +49,6 @@ class StreamService : Service() {
             notificationManager.createNotificationChannel(channel)
         }
         keepAliveTrick()
-    }
-
-    override fun onUnbind(intent: Intent?): Boolean {
-        onStartCallback = null
-        return super.onUnbind(intent)
     }
 
     private fun keepAliveTrick() {
@@ -73,7 +67,6 @@ class StreamService : Service() {
         Log.e(TAG, "RTP service started")
         usbMonitor = USBMonitor(this, onDeviceConnectListener)
         usbMonitor!!.register()
-        onStartCallback?.onStart()
         return START_STICKY
     }
 
@@ -118,12 +111,12 @@ class StreamService : Service() {
 
     fun setView(view: OpenGlView) {
         openGlView = view
-        rtmpUSB?.replaceView(openGlView)
+        rtmpUSB?.replaceView(openGlView, uvcCamera)
     }
 
     fun setView(context: Context) {
         openGlView = null
-        rtmpUSB?.replaceView(context)
+        rtmpUSB?.replaceView(context, uvcCamera)
     }
 
     fun startPreview() {
@@ -218,9 +211,5 @@ class StreamService : Service() {
 
     override fun onBind(intent: Intent): IBinder {
         return binder
-    }
-
-    fun interface OnConnectCallback {
-        fun onStart()
     }
 }
