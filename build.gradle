@@ -1,6 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.4.31'
-    ext.dagger_version = '2.33'
+    ext.dagger_version = '2.34.1'
     ext.hilt_version = "$dagger_version-beta"
 
     repositories {
