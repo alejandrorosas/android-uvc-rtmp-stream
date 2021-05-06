@@ -9,7 +9,7 @@ ext {
     // Hilt
     hilt = "com.google.dagger:hilt-android:$dagger_version"
     hiltCompiler = "com.google.dagger:hilt-compiler:$dagger_version"
-    androidXHiltCompiler = "androidx.hilt:hilt-compiler:1.0.0-beta01"
+    androidXHiltCompiler = "androidx.hilt:hilt-compiler:1.0.0"
 
     junit = "junit:junit:4.13.2"
 
