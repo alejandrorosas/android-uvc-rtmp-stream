@@ -3,6 +3,6 @@ apply plugin: 'kotlin-android'
 
 dependencies {
     implementation project(":libraries:libuvccamera")
-    api "com.github.pedroSG94.rtmp-rtsp-stream-client-java:rtplibrary:1.8.5"
+    api "com.github.pedroSG94.rtmp-rtsp-stream-client-java:rtplibrary:2.0.3"
     implementation rootProject.ext.core
 }
