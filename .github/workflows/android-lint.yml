@@ -3,7 +3,7 @@ on: push
 jobs:
   Lint:
     runs-on: ubuntu-latest
-    container: alejandrorosas/android-ndk:latest
+    container: alejandrorosas/android:latest
     steps:
       - uses: actions/checkout@v2
 
