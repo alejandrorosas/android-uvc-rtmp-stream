@@ -4,7 +4,7 @@ buildscript {
 
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
@@ -19,7 +19,7 @@ allprojects {
 
     repositories {
         google()
-        jcenter()
+        mavenCentral()
 
         maven {
             url 'https://jitpack.io'
@@ -29,7 +29,7 @@ allprojects {
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "11"
         }
     }
 }
@@ -46,6 +46,11 @@ subprojects {
                     targetSdkVersion 27
 
                     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+                }
+
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_11
+                    targetCompatibility JavaVersion.VERSION_11
                 }
             }
         }
