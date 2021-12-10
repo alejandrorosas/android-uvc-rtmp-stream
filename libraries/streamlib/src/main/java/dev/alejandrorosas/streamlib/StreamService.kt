@@ -65,8 +65,9 @@ class StreamService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.e(TAG, "RTP service started")
-        usbMonitor = USBMonitor(this, onDeviceConnectListener)
-        usbMonitor!!.register()
+        usbMonitor = USBMonitor(this, onDeviceConnectListener).apply {
+            register()
+        }
         return START_STICKY
     }
 
@@ -100,15 +101,6 @@ class StreamService : Service() {
         return false
     }
 
-    fun stopStream(force: Boolean) {
-        if (force) endpoint = null
-        if (rtmpUSB!!.isStreaming) {
-            rtmpUSB!!.stopStream(uvcCamera)
-        } else {
-            showNotification("You are already streaming :(")
-        }
-    }
-
     fun setView(view: OpenGlView) {
         openGlView = view
         rtmpUSB?.replaceView(openGlView, uvcCamera)
@@ -123,7 +115,8 @@ class StreamService : Service() {
         rtmpUSB?.startPreview(uvcCamera, width, height)
     }
 
-    fun stopStream() {
+    fun stopStream(force: Boolean = false) {
+        if (force) endpoint = null
         if (rtmpUSB?.isStreaming == true) rtmpUSB!!.stopStream(uvcCamera)
     }
 
