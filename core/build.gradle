@@ -7,7 +7,7 @@ dependencies {
     implementation rootProject.ext.core
     implementation rootProject.ext.dagger
     implementation rootProject.ext.hilt
-    implementation "androidx.preference:preference-ktx:1.1.1"
+    implementation "androidx.preference:preference-ktx:1.2.0"
 
     kapt rootProject.ext.daggerCompiler
     kapt rootProject.ext.hiltCompiler
