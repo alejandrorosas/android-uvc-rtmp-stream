@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 
 android {
-    ndkVersion "22.1.7171670"
+    ndkVersion "24.0.8215888"
 
     externalNativeBuild {
         ndkBuild {
