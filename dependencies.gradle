@@ -4,7 +4,7 @@ ext {
     dagger = "com.google.dagger:dagger:$dagger_version"
     daggerCompiler = "com.google.dagger:dagger-compiler:$dagger_version"
     constraintLayout = "androidx.constraintlayout:constraintlayout:2.1.4"
-    core = "androidx.core:core-ktx:1.7.0"
+    core = "androidx.core:core-ktx:1.8.0"
 
     // Hilt
     hilt = "com.google.dagger:hilt-android:$dagger_version"
