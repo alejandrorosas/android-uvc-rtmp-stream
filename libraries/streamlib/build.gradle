@@ -1,6 +1,10 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
+android {
+    namespace "dev.alejandrorosas.streamlib"
+}
+
 dependencies {
     implementation project(":libraries:libuvccamera")
     api "com.github.pedroSG94.rtmp-rtsp-stream-client-java:rtplibrary:1.8.5"

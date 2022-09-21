@@ -4,6 +4,8 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'dagger.hilt.android.plugin'
 
 android {
+    namespace "dev.alejandrorosas.apptemplate"
+
     defaultConfig {
         applicationId "dev.alejandrorosas.apptemplate"
 
