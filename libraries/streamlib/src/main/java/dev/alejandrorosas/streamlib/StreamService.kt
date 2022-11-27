@@ -27,13 +27,13 @@ class StreamService : Service() {
         private const val TAG = "RtpService"
         private const val channelId = "rtpStreamChannel"
         private const val notifyId = 123456
-        private const val width = 1920
-        private const val height = 1080
 
         var openGlView: OpenGlView? = null
     }
 
     val isStreaming: Boolean get() = endpoint != null
+    var cameraWidth = 1280
+    var cameraHeight = 960
 
     private var endpoint: String? = null
     private var rtmpUSB: RtmpUSB? = null
@@ -93,7 +93,7 @@ class StreamService : Service() {
     fun startStreamRtp(endpoint: String): Boolean {
         if (rtmpUSB?.isStreaming == false) {
             this.endpoint = endpoint
-            if (rtmpUSB!!.prepareVideo(width, height, 30, 4000 * 1024, false, 0, uvcCamera) && rtmpUSB!!.prepareAudio()) {
+            if (rtmpUSB!!.prepareVideo(cameraWidth, cameraHeight, 30, 4000 * 1024, false, 0, uvcCamera) && rtmpUSB!!.prepareAudio()) {
                 rtmpUSB!!.startStream(uvcCamera, endpoint)
                 return true
             }
@@ -112,7 +112,7 @@ class StreamService : Service() {
     }
 
     fun startPreview() {
-        rtmpUSB?.startPreview(uvcCamera, width, height)
+        rtmpUSB?.startPreview(uvcCamera, cameraWidth, cameraHeight)
     }
 
     fun stopStream(force: Boolean = false) {
@@ -169,18 +169,21 @@ class StreamService : Service() {
             val camera = UVCCamera()
             camera.open(ctrlBlock)
             try {
-                camera.setPreviewSize(width, height, UVCCamera.FRAME_FORMAT_MJPEG)
+                val maxSupportedSize = camera.supportedSizeList.maxBy { it.width * it.height }
+                cameraWidth = maxSupportedSize.width
+                cameraHeight = maxSupportedSize.height
+                camera.setPreviewSize(cameraWidth, cameraHeight, UVCCamera.FRAME_FORMAT_MJPEG)
             } catch (e: IllegalArgumentException) {
                 camera.destroy()
                 try {
-                    camera.setPreviewSize(width, height, UVCCamera.DEFAULT_PREVIEW_MODE)
+                    camera.setPreviewSize(cameraWidth, cameraHeight, UVCCamera.DEFAULT_PREVIEW_MODE)
                 } catch (e1: IllegalArgumentException) {
                     return
                 }
             }
             uvcCamera = camera
             prepareStreamRtp()
-            rtmpUSB!!.startPreview(uvcCamera, width, height)
+            rtmpUSB!!.startPreview(uvcCamera, cameraWidth, cameraHeight)
             endpoint?.let { startStreamRtp(it) }
         }
 
