@@ -11,17 +11,12 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.pedro.rtmp.utils.ConnectCheckerRtmp
 import com.pedro.rtplibrary.view.OpenGlView
 import com.serenegiant.usb.USBMonitor
 import com.serenegiant.usb.UVCCamera
-import net.ossrs.rtmp.ConnectCheckerRtmp
 
-/**
- * Basic RTMP/RTSP service streaming implementation with camera2
- */
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 class StreamService : Service() {
     companion object {
         private const val TAG = "RtpService"
@@ -53,10 +48,7 @@ class StreamService : Service() {
 
     private fun keepAliveTrick() {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
-            val notification = NotificationCompat.Builder(this, channelId)
-                .setOngoing(true)
-                .setContentTitle("")
-                .setContentText("").build()
+            val notification = NotificationCompat.Builder(this, channelId).setOngoing(true).setContentTitle("").setContentText("").build()
             startForeground(1, notification)
         } else {
             startForeground(1, Notification())
@@ -93,7 +85,7 @@ class StreamService : Service() {
     fun startStreamRtp(endpoint: String): Boolean {
         if (rtmpUSB?.isStreaming == false) {
             this.endpoint = endpoint
-            if (rtmpUSB!!.prepareVideo(cameraWidth, cameraHeight, 30, 4000 * 1024, false, 0, uvcCamera) && rtmpUSB!!.prepareAudio()) {
+            if (rtmpUSB!!.prepareVideo(cameraWidth, cameraHeight, 30, 4000 * 1024, 0, uvcCamera) && rtmpUSB!!.prepareAudio()) {
                 rtmpUSB!!.startStream(uvcCamera, endpoint)
                 return true
             }
@@ -135,6 +127,11 @@ class StreamService : Service() {
             Log.e(TAG, "RTP service destroy")
         }
 
+        override fun onConnectionStartedRtmp(rtmpUrl: String) {
+            showNotification("On connection started")
+            Log.e(TAG, "RTP On connection started")
+        }
+
         override fun onNewBitrateRtmp(bitrate: Long) {
 //            TODO("Not yet implemented")
         }
@@ -153,10 +150,11 @@ class StreamService : Service() {
     }
 
     private fun showNotification(text: String) {
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.mipmap.sym_def_app_icon)
-            .setContentTitle("RTP Stream")
-            .setContentText(text).build()
+        val notification =
+            NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(android.R.mipmap.sym_def_app_icon)
+                .setContentTitle("RTP Stream")
+                .setContentText(text).build()
         notificationManager.notify(notifyId, notification)
     }
 
