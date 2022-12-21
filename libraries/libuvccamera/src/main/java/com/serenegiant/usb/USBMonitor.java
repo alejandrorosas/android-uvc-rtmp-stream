@@ -23,17 +23,6 @@
 
 package com.serenegiant.usb;
 
-import java.io.UnsupportedEncodingException;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -50,6 +39,17 @@ import android.os.HandlerThread;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
+
+import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class USBMonitor {
 
@@ -173,7 +173,12 @@ public final class USBMonitor {
 			if (DEBUG) Log.i(TAG, "register:");
 			final Context context = mWeakContext.get();
 			if (context != null) {
-				mPermissionIntent = PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0);
+				mPermissionIntent = PendingIntent.getBroadcast(
+						context,
+						0,
+						new Intent(ACTION_USB_PERMISSION),
+						PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+				);
 				final IntentFilter usbPermissionFilter = new IntentFilter(ACTION_USB_PERMISSION);
 				// ACTION_USB_DEVICE_ATTACHED never comes on some devices so it should not be added here
 				final IntentFilter usbDetachFilter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);

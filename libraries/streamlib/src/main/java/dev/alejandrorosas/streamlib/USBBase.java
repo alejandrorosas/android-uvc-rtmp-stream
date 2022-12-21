@@ -4,17 +4,15 @@ import android.content.Context;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
-import android.os.Build;
 import android.util.Log;
-
-import androidx.annotation.RequiresApi;
 
 import com.pedro.encoder.Frame;
 import com.pedro.encoder.audio.AudioEncoder;
 import com.pedro.encoder.audio.GetAacData;
 import com.pedro.encoder.input.audio.GetMicrophoneData;
 import com.pedro.encoder.input.audio.MicrophoneManager;
-import com.pedro.encoder.input.video.CameraHelper;
+import com.pedro.encoder.input.audio.MicrophoneManagerManual;
+import com.pedro.encoder.input.audio.MicrophoneMode;
 import com.pedro.encoder.input.video.GetCameraData;
 import com.pedro.encoder.utils.CodecUtil;
 import com.pedro.encoder.video.FormatVideoEncoder;
@@ -42,8 +40,7 @@ import java.nio.ByteBuffer;
  * Created by pedro on 7/07/17.
  */
 
-public abstract class USBBase
-        implements GetAacData, GetCameraData, GetVideoData, GetMicrophoneData {
+public abstract class USBBase implements GetAacData, GetCameraData, GetVideoData, GetMicrophoneData {
 
     private static final String TAG = "Camera1Base";
 
@@ -64,7 +61,6 @@ public abstract class USBBase
     private MediaFormat videoFormat;
     private MediaFormat audioFormat;
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public USBBase(OpenGlView openGlView) {
         context = openGlView.getContext();
         this.glInterface = openGlView;
@@ -72,7 +68,6 @@ public abstract class USBBase
         init();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public USBBase(LightOpenGlView lightOpenGlView) {
         context = lightOpenGlView.getContext();
         this.glInterface = lightOpenGlView;
@@ -80,7 +75,6 @@ public abstract class USBBase
         init();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public USBBase(Context context) {
         this.context = context;
         glInterface = new OffScreenGlThread(context);
@@ -90,8 +84,7 @@ public abstract class USBBase
 
     private void init() {
         videoEncoder = new VideoEncoder(this);
-        microphoneManager = new MicrophoneManager(this);
-        audioEncoder = new AudioEncoder(this);
+        setMicrophoneMode(MicrophoneMode.SYNC);
     }
 
     /**
@@ -106,38 +99,29 @@ public abstract class USBBase
      * Call this method before use @startStream. If not you will do a stream without video. NOTE:
      * Rotation with encoder is silence ignored in some devices.
      *
-     * @param width            resolution in px.
-     * @param height           resolution in px.
-     * @param fps              frames per second of the stream.
-     * @param bitrate          H264 in kb.
-     * @param hardwareRotation true if you want rotate using encoder, false if you want rotate with
-     *                         software if you are using a SurfaceView or TextureView or with OpenGl if you are using
-     *                         OpenGlView.
-     * @param rotation         could be 90, 180, 270 or 0. You should use CameraHelper.getCameraOrientation
-     *                         with SurfaceView or TextureView and 0 with OpenGlView or LightOpenGlView. NOTE: Rotation with
-     *                         encoder is silence ignored in some devices.
+     * @param width    resolution in px.
+     * @param height   resolution in px.
+     * @param fps      frames per second of the stream.
+     * @param bitrate  H264 in kb.
+     * @param rotation could be 90, 180, 270 or 0. You should use CameraHelper.getCameraOrientation
+     *                 with SurfaceView or TextureView and 0 with OpenGlView or LightOpenGlView. NOTE: Rotation with
+     *                 encoder is silence ignored in some devices.
      * @return true if success, false if you get a error (Normally because the encoder selected
      * doesn't support any configuration seated or your device hasn't a H264 encoder).
      */
-    public boolean prepareVideo(
-            int width, int height, int fps, int bitrate, boolean hardwareRotation,
-            int iFrameInterval, int rotation, UVCCamera uvcCamera) {
+    public boolean prepareVideo(int width, int height, int fps, int bitrate, int iFrameInterval, int rotation, UVCCamera uvcCamera) {
         if (onPreview) {
             stopPreview(uvcCamera);
             onPreview = true;
         }
-        return videoEncoder.prepareVideoEncoder(width, height, fps, bitrate, rotation, hardwareRotation,
-                iFrameInterval, FormatVideoEncoder.SURFACE
-        );
+        return videoEncoder.prepareVideoEncoder(width, height, fps, bitrate, rotation, iFrameInterval, FormatVideoEncoder.SURFACE);
     }
 
     /**
      * backward compatibility reason
      */
-    public boolean prepareVideo(
-            int width, int height, int fps, int bitrate, boolean hardwareRotation,
-            int rotation, UVCCamera uvcCamera) {
-        return prepareVideo(width, height, fps, bitrate, hardwareRotation, 2, rotation, uvcCamera);
+    public boolean prepareVideo(int width, int height, int fps, int bitrate, int rotation, UVCCamera uvcCamera) {
+        return prepareVideo(width, height, fps, bitrate, 2, rotation, uvcCamera);
     }
 
     protected abstract void prepareAudioRtp(boolean isStereo, int sampleRate);
@@ -159,19 +143,7 @@ public abstract class USBBase
             boolean noiseSuppressor) {
         microphoneManager.createMicrophone(sampleRate, isStereo, echoCanceler, noiseSuppressor);
         prepareAudioRtp(isStereo, sampleRate);
-        return audioEncoder.prepareAudioEncoder(bitrate, sampleRate, isStereo, 0);
-    }
-
-    /**
-     * Same to call: rotation = 0; if (Portrait) rotation = 90; prepareVideo(640, 480, 30, 1200 *
-     * 1024, false, rotation);
-     *
-     * @return true if success, false if you get a error (Normally because the encoder selected
-     * doesn't support any configuration seated or your device hasn't a H264 encoder).
-     */
-    public boolean prepareVideo(UVCCamera uvcCamera) {
-        int rotation = CameraHelper.getCameraOrientation(context);
-        return prepareVideo(640, 480, 30, 1200 * 1024, false, rotation, uvcCamera);
+        return audioEncoder.prepareAudioEncoder(bitrate, sampleRate, isStereo, microphoneManager.getMaxInputSize());
     }
 
     /**
@@ -199,7 +171,6 @@ public abstract class USBBase
      * @param path where file will be saved.
      * @throws IOException If you init it before start stream.
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void startRecord(UVCCamera uvcCamera, final String path) throws IOException {
         mediaMuxer = new MediaMuxer(path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
         recording = true;
@@ -213,7 +184,6 @@ public abstract class USBBase
     /**
      * Stop record MP4 video started with @startRecord. If you don't call it file will be unreadable.
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void stopRecord(UVCCamera uvcCamera) {
         recording = false;
         if (mediaMuxer != null) {
@@ -352,7 +322,7 @@ public abstract class USBBase
         }
         if (!recording) {
             microphoneManager.stop();
-            if (glInterface != null && Build.VERSION.SDK_INT >= 18) {
+            if (glInterface != null) {
                 glInterface.removeMediaCodecSurface();
                 if (glInterface instanceof OffScreenGlThread) {
                     glInterface.stop();
@@ -427,7 +397,6 @@ public abstract class USBBase
      *
      * @param bitrate H264 in kb.
      */
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void setVideoBitrateOnFly(int bitrate) {
         videoEncoder.setVideoBitrateOnFly(bitrate);
     }
@@ -473,7 +442,7 @@ public abstract class USBBase
 
     @Override
     public void getAacData(ByteBuffer aacBuffer, MediaCodec.BufferInfo info) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && recording && canRecord) {
+        if (recording && canRecord) {
             mediaMuxer.writeSampleData(audioTrack, aacBuffer, info);
         }
         if (streaming) {
@@ -482,13 +451,6 @@ public abstract class USBBase
     }
 
     protected abstract void onSpsPpsVpsRtp(ByteBuffer sps, ByteBuffer pps, ByteBuffer vps);
-
-    @Override
-    public void onSpsPps(ByteBuffer sps, ByteBuffer pps) {
-        if (streaming) {
-            onSpsPpsVpsRtp(sps, pps, null);
-        }
-    }
 
     @Override
     public void onSpsPpsVps(ByteBuffer sps, ByteBuffer pps, ByteBuffer vps) {
@@ -501,7 +463,7 @@ public abstract class USBBase
 
     @Override
     public void getVideoData(ByteBuffer h264Buffer, MediaCodec.BufferInfo info) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && recording) {
+        if (recording) {
             if (info.flags == MediaCodec.BUFFER_FLAG_KEY_FRAME
                 && !canRecord
                 && videoFormat != null
@@ -540,6 +502,34 @@ public abstract class USBBase
         audioFormat = mediaFormat;
     }
 
+    /**
+     * Must be called before prepareAudio.
+     *
+     * @param microphoneMode mode to work accord to audioEncoder. By default ASYNC:
+     *                       SYNC using same thread. This mode could solve choppy audio or audio frame discarded.
+     *                       ASYNC using other thread.
+     */
+    public void setMicrophoneMode(MicrophoneMode microphoneMode) {
+        switch (microphoneMode) {
+            case SYNC:
+                microphoneManager = new MicrophoneManagerManual();
+                audioEncoder = new AudioEncoder(this);
+                audioEncoder.setGetFrame(((MicrophoneManagerManual) microphoneManager).getGetFrame());
+                audioEncoder.setTsModeBuffer(false);
+                break;
+            case ASYNC:
+                microphoneManager = new MicrophoneManager(this);
+                audioEncoder = new AudioEncoder(this);
+                audioEncoder.setTsModeBuffer(false);
+                break;
+            case BUFFER:
+                microphoneManager = new MicrophoneManager(this);
+                audioEncoder = new AudioEncoder(this);
+                audioEncoder.setTsModeBuffer(true);
+                break;
+        }
+    }
+
     public void replaceView(Context context, UVCCamera uvcCamera) {
         replaceGlInterface(new OffScreenGlThread(context), uvcCamera);
     }
@@ -555,9 +545,8 @@ public abstract class USBBase
     /**
      * Replace glInterface used on fly. Ignored if you use SurfaceView or TextureView
      */
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void replaceGlInterface(GlInterface glInterface, UVCCamera uvcCamera) {
-        if (this.glInterface != null && Build.VERSION.SDK_INT >= 18) {
+        if (this.glInterface != null) {
             if (isStreaming() || isRecording() || isOnPreview()) {
                 uvcCamera.stopPreview();
                 this.glInterface.removeMediaCodecSurface();

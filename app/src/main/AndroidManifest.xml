@@ -19,7 +19,8 @@
             android:name=".MainActivity"
             android:configChanges="orientation"
             android:launchMode="singleTask"
-            android:screenOrientation="nosensor">
+            android:screenOrientation="nosensor"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
